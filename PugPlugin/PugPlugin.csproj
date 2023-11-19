@@ -5,5 +5,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="CounterStrikeSharp.API">
+            <HintPath>..\dllinclude\CounterStrikeSharp.API.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 
 </Project>

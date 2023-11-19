@@ -1,6 +1,6 @@
 ﻿namespace PugPlugin.Config;
 
-public class PugConfig
+public static class PugConfig
 {
-    
+    public static string ChatPrefix = "[PugPlugin]";
 }
