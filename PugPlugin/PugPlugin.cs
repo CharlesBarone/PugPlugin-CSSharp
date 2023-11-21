@@ -112,6 +112,8 @@ public class PugPlugin: BasePlugin
             _captainPickPlayerMenu.Cleanup();
             _testMenu.Cleanup();
             
+            _captainPickPlayerMenu.RemoveAllMenuItems();
+            
             //If in knife round, set settings back to warmup default.
             if (_gameManager.GetGameState() == 1)
             {

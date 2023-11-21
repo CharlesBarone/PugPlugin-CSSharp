@@ -59,6 +59,11 @@ public abstract class Menu<T>
             _menuItems.RemoveAt(index);
         }
     }
+    
+    public void RemoveAllMenuItems()
+    {
+        _menuItems.Clear();
+    }
 
     public int GetMenuItemCount()
     {
