@@ -72,17 +72,31 @@ public class PlayerManager
         return _readyCount == 10;
     }
 
-    public bool TogglePlayerReady(CCSPlayerController player)
+    public bool SetReady(CCSPlayerController player)
     {
-        Players[player.SteamID].IsReady = !Players[player.SteamID].IsReady;
-        if (Players[player.SteamID].IsReady)
+        if (!Players[player.SteamID].IsReady)
         {
+            Players[player.SteamID].IsReady = true;
             _readyCount++;
+            return true;
         }
         else
         {
-            _readyCount--;
+            return false;
         }
-        return Players[player.SteamID].IsReady;
+    }
+    
+    public bool SetUnready(CCSPlayerController player)
+    {
+        if (Players[player.SteamID].IsReady)
+        {
+            Players[player.SteamID].IsReady = false;
+            _readyCount--;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

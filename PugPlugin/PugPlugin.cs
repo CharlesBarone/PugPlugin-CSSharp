@@ -1,7 +1,9 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text.Json;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Targets;
 using PugPlugin.Config;
 using PugPlugin.Extensions;
 using PugPlugin.Managers;
@@ -12,10 +14,10 @@ namespace PugPlugin;
 public class PugPlugin: BasePlugin
 {
     public override string ModuleName => "PugPlugin";
-    public override string ModuleVersion => "1.0";
-    public override string ModuleAuthor => "hypnos";
+    public override string ModuleVersion => "1.1";
+    public override string ModuleAuthor => "hypnos <hyps.dev>";
 
-    public override string ModuleDescription => "";
+    public override string ModuleDescription => "Pug server setup plugin, automates the setup of 10man servers.";
 
     private PlayerManager _playerManager = new();
     private GameManager _gameManager = new();
@@ -148,31 +150,18 @@ public class PugPlugin: BasePlugin
         _playerManager.ResetAliveCount();
         return HookResult.Continue;
     }
-
-    [ConsoleCommand("css_test", "Ask me if I give a fuck...")]
-    public void Test(CCSPlayerController? player, CommandInfo command)
-    {
-        _testMenu.Init(player!, true, TestMenuCallback);
-        //_captainPickPlayerMenu.SetPlayers(_teamManager.GetCaptain1().PlayerController!.SteamID, _teamManager.GetCaptain2().PlayerController!.SteamID);
-        //_captainPickPlayerMenu.Init(player!, false, CaptainPickPlayerMenuCallback);
-    }
-
-    public void TestMenuCallback(int result, CCSPlayerController menuPlayer)
-    {
-        menuPlayer.PrintToChat($"TESTMENU: You selected {result}");
-    }
     
-    [ConsoleCommand("css_r", "Toggle player ready status")]
-    [ConsoleCommand("css_ready", "Toggle player ready status")]
+    [ConsoleCommand("css_r", "Set player status to ready")]
+    [ConsoleCommand("css_ready", "Set player status to ready")]
     public void OnReady(CCSPlayerController? player, CommandInfo command)
     {
         if (player == null || !player.IsOnATeam() || _gameManager.GetIsStarted()) return;
 
-        if (_playerManager.TogglePlayerReady(player))
+        if (_playerManager.SetReady(player))
         {
             player.PrintToChat($"{PugConfig.ChatPrefix} Set status to Ready!");
             player.PrintToConsole($"{PugConfig.ChatPrefix} Set status to Ready!");
-            Server.PrintToChatAll($"{PugConfig.ChatPrefix} {_playerManager.GetReadyCount()}/{_playerManager.GetPlayerCount()} Players Ready");
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} {_playerManager.GetReadyCount()}/{_playerManager.GetPlayerCount()} Players Ready. {player.PlayerName} set to Ready!");
             
             if (_playerManager.IsServerFull() && _playerManager.IsServerReady())
             {
@@ -181,9 +170,27 @@ public class PugPlugin: BasePlugin
         }
         else
         {
-            player.PrintToChat($"{PugConfig.ChatPrefix} Set status to Unready.");
-            player.PrintToConsole($"{PugConfig.ChatPrefix} Set status to Unready.");
-            Server.PrintToChatAll($"{PugConfig.ChatPrefix} {_playerManager.GetReadyCount()}/{_playerManager.GetPlayerCount()} Players Ready");
+            player.PrintToChat($"{PugConfig.ChatPrefix} status already set to Ready (!ur/!unready to Unready).");
+            player.PrintToConsole($"{PugConfig.ChatPrefix} status already set to Ready (!ur/!unready to Unready).");
+        }
+    }
+    
+    [ConsoleCommand("css_ur", "Set player status to unready")]
+    [ConsoleCommand("css_uready", "Set player status to unready")]
+    public void OnUnready(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player == null || !player.IsOnATeam() || _gameManager.GetIsStarted()) return;
+
+        if (_playerManager.SetUnready(player))
+        {
+            player.PrintToChat($"{PugConfig.ChatPrefix} Set status to Unready!");
+            player.PrintToConsole($"{PugConfig.ChatPrefix} Set status to Unready!");
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} {_playerManager.GetReadyCount()}/{_playerManager.GetPlayerCount()} Players Ready. {player.PlayerName} set to Unready.");
+        }
+        else
+        {
+            player.PrintToChat($"{PugConfig.ChatPrefix} status already set to Unready (!r/!ready to Ready).");
+            player.PrintToConsole($"{PugConfig.ChatPrefix} status already set to Unready (!r/!ready to Ready).");
         }
     }
     
@@ -216,6 +223,7 @@ public class PugPlugin: BasePlugin
                 _teamManager.SetCaptain2(target.SteamID);
                 _teamManager.AddPlayerToTeam2(target);
                 _gameManager.StartSetupRound();
+                Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName} is now selecting 1st captain preference. (First Team or First Player)");
                 _captain1ChoiceMenu.Init(_teamManager.GetCaptain1().PlayerController!, false, Captain1ChoiceMenuCallback);
             }
         }
@@ -229,11 +237,13 @@ public class PugPlugin: BasePlugin
         if (result == 0)
         {
             _teamManager.SetTeam1CaptainPickFirstPlayer(false);
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName} picked First Team choice.");
             Server.NextFrame(() => _pickFirstSideMenu.Init(player, false, PickFirstSideMenuCallback));
         }
         else
         {
             _teamManager.SetTeam1CaptainPickFirstPlayer(true);
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName} picked First Player choice.");
             Server.NextFrame(() => _pickFirstSideMenu.Init(_teamManager.GetCaptain2().PlayerController!, false, PickFirstSideMenuCallback));
         }
     }
@@ -280,10 +290,12 @@ public class PugPlugin: BasePlugin
         
         if (_teamManager.GetTeam1CaptainPickFirstPlayer())
         {
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName}'s turn to pick a player!");
             Server.NextFrame(() => _captainPickPlayerMenu.Init(_teamManager.GetCaptain1().PlayerController!, false, CaptainPickPlayerMenuCallback));
         }
         else
         {
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain2().PlayerController!.PlayerName}'s turn to pick a player!");
             Server.NextFrame(() => _captainPickPlayerMenu.Init(_teamManager.GetCaptain2().PlayerController!, false, CaptainPickPlayerMenuCallback));
         }
     }
@@ -302,16 +314,20 @@ public class PugPlugin: BasePlugin
         if (_teamManager.GetCaptain1().PlayerController!.SteamID == menuPlayer.SteamID) //Team1
         {
             _teamManager.AddPlayerToTeam1(player);
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName} picked {player.PlayerName}.");
             if (_captainPickPlayerMenu.GetMenuItemCount() != 0)
             {
+                Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain2().PlayerController!.PlayerName}'s turn to pick a player!");
                 Server.NextFrame(() => _captainPickPlayerMenu.Init(_teamManager.GetCaptain2().PlayerController!, false, CaptainPickPlayerMenuCallback));
             }
         }
         else //Team2
         {
             _teamManager.AddPlayerToTeam2(player);
+            Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain2().PlayerController!.PlayerName} picked {player.PlayerName}.");
             if (_captainPickPlayerMenu.GetMenuItemCount() != 0)
             {
+                Server.PrintToChatAll($"{PugConfig.ChatPrefix} Captain {_teamManager.GetCaptain1().PlayerController!.PlayerName}'s turn to pick a player!");
                 Server.NextFrame(() => _captainPickPlayerMenu.Init(_teamManager.GetCaptain1().PlayerController!, false, CaptainPickPlayerMenuCallback));
             }
         }
