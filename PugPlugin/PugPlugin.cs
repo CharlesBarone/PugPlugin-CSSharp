@@ -170,8 +170,8 @@ public class PugPlugin: BasePlugin
         }
         else
         {
-            player.PrintToChat($"{PugConfig.ChatPrefix} status already set to Ready (!ur/!unready to Unready).");
-            player.PrintToConsole($"{PugConfig.ChatPrefix} status already set to Ready (!ur/!unready to Unready).");
+            player.PrintToChat($"{PugConfig.ChatPrefix} Status already set to Ready (!ur/!unready to Unready).");
+            player.PrintToConsole($"{PugConfig.ChatPrefix} Status already set to Ready (!ur/!unready to Unready).");
         }
     }
     
@@ -189,8 +189,8 @@ public class PugPlugin: BasePlugin
         }
         else
         {
-            player.PrintToChat($"{PugConfig.ChatPrefix} status already set to Unready (!r/!ready to Ready).");
-            player.PrintToConsole($"{PugConfig.ChatPrefix} status already set to Unready (!r/!ready to Ready).");
+            player.PrintToChat($"{PugConfig.ChatPrefix} Status already set to Unready (!r/!ready to Ready).");
+            player.PrintToConsole($"{PugConfig.ChatPrefix} Status already set to Unready (!r/!ready to Ready).");
         }
     }
     
